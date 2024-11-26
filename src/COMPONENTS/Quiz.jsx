@@ -1,30 +1,58 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import QUESTIONS from "../questions";
+import quizCompleteImg from "../assets/quiz-complete.png";
+import QuestionTimer from "./QuestionTimer";
 
 export default function Quiz() {
-  const [userAnswer, setUserAnswer] = useState([0]);
+  const [userAnswer, setUserAnswer] = useState([]);
   const activeQuestionIndex = userAnswer.length;
 
-  function handleSelectAnswer(selectedAnswer){
-    setUserAnswer( (prevUserAnswer)=>{
-      return [...prevUserAnswer,selectedAnswer]
+  const quizIsComplete = activeQuestionIndex === QUESTIONS.length;
 
-    })
+  const handleSelectAnswer = useCallback(function handleSelectAnswer(
+    selectedAnswer
+  ) {
+    setUserAnswer((prevUserAnswer) => {
+      return [...prevUserAnswer, selectedAnswer];
+    });
+  },
+  []);
 
+  const handleSkipAnswer = useCallback(() => {
+    handleSelectAnswer(null);
+  }, [handleSelectAnswer]);
+
+  if (quizIsComplete) {
+    return (
+      <div id="summary">
+        <img src={quizCompleteImg} alt="" />
+        <h2>Quiz Completed!</h2>
+      </div>
+    );
   }
 
+  const shuffledAnswers = [...QUESTIONS[activeQuestionIndex].answers];
+  shuffledAnswers.sort(() => Math.random() - 0.5);
+
   return (
-    <div id="question">
-      <h2>{QUESTIONS[activeQuestionIndex].text}</h2>
-      <ul id="answers">
-        {
-          QUESTIONS[activeQuestionIndex].answers.map((answer) =>(
+    <div id="quiz">
+      <div id="question">
+        <QuestionTimer
+          key={activeQuestionIndex}
+          timeout={10000}
+          onTimeOut={handleSkipAnswer}
+        />
+        <h2>{QUESTIONS[activeQuestionIndex].text}</h2>
+        <ul id="answers">
+          {shuffledAnswers.map((answer) => (
             <li key={answer} className="answer">
-              <button onClick={()=> handleSelectAnswer(answer)}>{answer}</button>
+              <button onClick={() => handleSelectAnswer(answer)}>
+                {answer}
+              </button>
             </li>
-          ))
-        }
-      </ul>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
